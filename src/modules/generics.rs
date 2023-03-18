@@ -1,4 +1,4 @@
-use cgmath::Vector3;
+use glam::Vec3;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -30,8 +30,8 @@ impl Vertex {
 }
 
 pub struct Instance {
-    pub position: Vector3<f32>,
-    pub color: Vector3<f32>,
+    pub position: Vec3,
+    pub color: Vec3,
 }
 impl Instance {
     pub fn to_raw(&self) -> InstanceRaw {

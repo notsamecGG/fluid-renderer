@@ -1,5 +1,5 @@
 use crate::Instance;
-use cgmath::vec3;
+use glam::vec3;
 
 pub fn create_grid(grid_dimensions: (u32, u32), screen_dimensions: (u32, u32), offset: (f32, f32, f32)) -> Vec<Instance> {
     let width = grid_dimensions.0;

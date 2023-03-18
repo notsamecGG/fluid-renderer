@@ -4,13 +4,10 @@ pub trait Shape {
     const VERTICES: &'static [Vertex];
     const INDICES: &'static [u16];
 
-    fn scale(&self, factor: f32, aspect_ratio: f32) -> Vec<Vertex> {
+    fn scale(&self, factor: f32) -> Vec<Vertex> {
         let vertices = Self::VERTICES.iter().map(|vertex| {
-            let mut position = vertex.position.clone();
-            position[0] *= aspect_ratio;
-
             Vertex {
-                position: position.map(|x| {x * factor}),
+                position: vertex.position.map(|x| {x * factor}),
                 tex_coords: vertex.tex_coords,
             }
         }).collect::<Vec<_>>();

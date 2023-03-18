@@ -9,3 +9,6 @@ pub use shapes::*;
 
 pub mod instances;
 pub use instances::*;
+
+pub mod simple_camera;
+pub use simple_camera::*;

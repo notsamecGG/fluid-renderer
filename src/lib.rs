@@ -21,14 +21,26 @@ pub async fn run() {
         .unwrap();
 
     let winit::dpi::PhysicalSize{width, height} = window.inner_size();
-    let aspect_ratio = height as f32 / width as f32;
+    let aspect_ratio = width as f32 / height as f32;
 
     let shader_source = wgpu::ShaderSource::Wgsl(std::fs::read_to_string("src/shader.wgsl").unwrap().into());
-    let vertices = Quad.scale(PARTICLE_SIZE, aspect_ratio);
+    let vertices = Quad.scale(PARTICLE_SIZE);
     let indices = Quad::INDICES;
     let instances = create_grid(GRID_DIMENSIONS, (2, 2), (-1.0, -1.0, 0.0));
+    let camera = Camera {
+        aspect: aspect_ratio,
+        fovy: 45.0,
+        ..Default::default()
+    };
 
-    let mut state = State::new(window, shader_source, vertices.as_slice(), indices, instances).await;
+    let mut state = State::new(
+            window, 
+            shader_source, 
+            vertices.as_slice(), 
+            indices, 
+            instances, 
+            camera
+        ).await;
 
     event_loop.run(move |event, _, control_flow| {
         match event {

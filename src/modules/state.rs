@@ -1,4 +1,4 @@
-use std::iter;
+use std::{iter, time::Instant};
 use wgpu::util::DeviceExt;
 use winit::{
     window::Window,
@@ -6,7 +6,7 @@ use winit::{
 };
 use crate::{
     Vertex, 
-    Instance
+    Instance, InstanceRaw
 };
 
 
@@ -32,6 +32,9 @@ pub struct State {
     pub num_indices: u32,
    
     pub instances: Vec<Instance>,
+    pub num_instances: u32,
+
+    pub start: Instant,
     #[allow(dead_code)]
     instance_buffer: wgpu::Buffer,
 }
@@ -121,7 +124,7 @@ impl State {
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: "vs_main",
-                buffers: &[Vertex::desc(), Instance::desc()],
+                buffers: &[Vertex::desc(), InstanceRaw::desc()],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
@@ -177,9 +180,12 @@ impl State {
         });
         let num_indices = indices.len() as u32;
 
+        let raw_instances = instances.iter()
+            .map(|instance| instance.to_raw())
+            .collect::<Vec<_>>();
         let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Instance Buffer"),
-            contents: bytemuck::cast_slice(&instances),
+            contents: bytemuck::cast_slice(&raw_instances),
             usage: wgpu::BufferUsages::VERTEX,
         });
 
@@ -191,6 +197,8 @@ impl State {
         let (surface, device, queue, config, size) = Self::init_wgpu(&window).await;
         let render_pipeline = Self::init_render_pipeline(&device, shader_source, &config);
         let (vertex_buffer, index_buffer, num_indices, instance_buffer) = Self::init_buffers(&device, vertices, indices, &instances);
+        let num_instances = instances.len() as _;
+        let start = Instant::now();
 
         State {
             surface,
@@ -204,7 +212,9 @@ impl State {
             index_buffer,
             num_indices,
             instances,
-            instance_buffer
+            num_instances,
+            instance_buffer,
+            start,
         }
     }
 }
@@ -229,7 +239,13 @@ impl State {
         false
     }
 
-    pub fn update(&mut self) { }
+    pub fn update(&mut self) { 
+        let num_elapsed = self.start.elapsed().as_millis() as u32 / 10;
+
+        if num_elapsed <= self.instances.len() as _ {
+            self.num_instances = num_elapsed;
+        }
+    }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
@@ -261,7 +277,7 @@ impl State {
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.draw_indexed(0..self.num_indices, 0, 0..self.instances.len() as _);
+            render_pass.draw_indexed(0..self.num_indices, 0, 0..self.num_instances);
         }
 
         self.queue.submit(iter::once(encoder.finish()));

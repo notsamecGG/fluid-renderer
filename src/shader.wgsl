@@ -6,11 +6,13 @@ struct VertexInput {
 }
 struct InstanceInput {
     @location(5) position: vec3<f32>,
+    @location(6) color: vec3<f32>,
 }
 
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
     @location(0) tex_coords: vec2<f32>,
+    @location(1) color: vec3<f32>,
 }
 
 @vertex
@@ -22,6 +24,7 @@ fn vs_main(
 
     out.tex_coords = model.tex_coords;
     out.clip_position = vec4(model.position + instance.position, 1.0);
+    out.color = instance.color;
 
     return out;
 }
@@ -35,6 +38,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     var alpha = 1f - step(0.4, distance_from_middle);
 
     var color = vec3(0.1f, 0.1f, 1.0f); 
+    color = in.color;
     color *= smoothstep(0.78, 0.0, distance_from_middle);
 
     return vec4(color, alpha);

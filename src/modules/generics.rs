@@ -1,3 +1,5 @@
+use cgmath::Vector3;
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {
@@ -27,15 +29,26 @@ impl Vertex {
     }
 }
 
-
+pub struct Instance {
+    pub position: Vector3<f32>,
+    pub color: Vector3<f32>,
+}
+impl Instance {
+    pub fn to_raw(&self) -> InstanceRaw {
+        InstanceRaw { 
+            position: self.position.into(), 
+            color: self.color.into(),
+        }
+    }
+}
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct Instance {
+pub struct InstanceRaw {
     pub position: [f32; 3],
+    pub color: [f32; 3],
 }
-
-impl Instance {
+impl InstanceRaw {
     pub fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
         use std::mem;
 
@@ -51,7 +64,13 @@ impl Instance {
                     shader_location: 5,
                     format: wgpu::VertexFormat::Float32x3,
                 },
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32; 3]>() as u64,
+                    shader_location: 6,
+                    format: wgpu::VertexFormat::Float32x3,
+                }
             ],
         }
     }
 }
+

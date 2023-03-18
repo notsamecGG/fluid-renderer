@@ -11,9 +11,9 @@ use crate::{
 
 
 pub const CLEAR_COLOR: wgpu::Color = wgpu::Color {
-    r: 0.12,
-    g: 0.13,
-    b: 0.10,
+    r: 0.004,
+    g: 0.003,
+    b: 0.008,
     a: 1.0
 };
 
@@ -152,7 +152,7 @@ impl State {
             multisample: wgpu::MultisampleState {
                 count: 1,
                 mask: !0,
-                alpha_to_coverage_enabled: false,
+                alpha_to_coverage_enabled: true,
             },
             // If the pipeline will be used with a multiview render pass, this
             // indicates how many array layers the attachments will have.

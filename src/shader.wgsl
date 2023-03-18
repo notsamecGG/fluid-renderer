@@ -30,5 +30,12 @@ fn vs_main(
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    return vec4(1.0);
+    var position = in.tex_coords - vec2(0.5, 0.5);
+    var distance_from_middle = length(position);
+    var alpha = 1f - step(0.4, distance_from_middle);
+
+    var color = vec3(0.1f, 0.1f, 1.0f); // todo: remove alpha
+    color *= smoothstep(0.78, 0.0, distance_from_middle);
+
+    return vec4(color, alpha);
 }

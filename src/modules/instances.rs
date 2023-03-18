@@ -9,8 +9,8 @@ pub fn create_grid(grid_dimensions: (u32, u32), screen_dimensions: (u32, u32), o
 
     let instance_offset: (f32, f32) = (screen_dimensions.0 / grid_dimensions.0, screen_dimensions.1 / grid_dimensions.1);
 
-    (0..height).flat_map(|y| {
-        (0..width).map(move |x| {
+    (1..height).flat_map(|y| {
+        (1..width).map(move |x| {
             Instance {
                 position: [
                     x as f32 * instance_offset.0 + offset.0,

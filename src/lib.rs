@@ -8,6 +8,9 @@ mod modules;
 pub use modules::*;
 
 
+const PARTICLE_SIZE: f32 = 0.1;
+const GRID_DIMENSIONS: (u32, u32) = (20, 20);
+
 pub async fn run() {
     env_logger::init();
 
@@ -20,10 +23,10 @@ pub async fn run() {
     let winit::dpi::PhysicalSize{width, height} = window.inner_size();
     let aspect_ratio = height as f32 / width as f32;
 
-    let shader_source = wgpu::ShaderSource::Wgsl(include_str!("./shader.wgsl").into());
-    let vertices = Quad.scale(0.1, aspect_ratio);
+    let shader_source = wgpu::ShaderSource::Wgsl(std::fs::read_to_string("src/shader.wgsl").unwrap().into());
+    let vertices = Quad.scale(PARTICLE_SIZE, aspect_ratio);
     let indices = Quad::INDICES;
-    let instances = create_grid((10, 10), (2, 2), (-1.0, -1.0, 0.0));
+    let instances = create_grid(GRID_DIMENSIONS, (2, 2), (-1.0, -1.0, 0.0));
 
     let mut state = State::new(window, shader_source, vertices.as_slice(), indices, instances).await;
 

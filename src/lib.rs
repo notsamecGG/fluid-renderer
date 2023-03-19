@@ -4,19 +4,20 @@ use winit::{
     window::{WindowBuilder, Window},
 };
 
+pub use wgpu;
+pub use winit;
+
 mod modules;
 pub use modules::*;
 
 
-const PARTICLE_SIZE: f32 = 0.1;
-const GRID_DIMENSIONS: (u32, u32) = (20, 20);
+pub const PARTICLE_SIZE: f32 = 0.1;
+pub const GRID_DIMENSIONS: (u32, u32) = (20, 20);
 
 
 pub struct InitOutput {
     pub event_loop: EventLoop<()>,
     pub window: Window,
-    pub width: u32,
-    pub height: u32,
     pub aspect_ratio: f32,
 }
 
@@ -35,8 +36,6 @@ pub fn init() -> InitOutput {
     InitOutput {
         event_loop,
         window,
-        width,
-        height,
         aspect_ratio
     }
 }

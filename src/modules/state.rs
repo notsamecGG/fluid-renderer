@@ -34,6 +34,8 @@ pub struct State {
    
     pub instances: Vec<Instance>,
     pub num_instances: u32,
+    #[allow(dead_code)]
+    instance_buffer: wgpu::Buffer,
 
     pub camera: Camera,
     pub camera_uniform: CameraUniform,
@@ -41,8 +43,6 @@ pub struct State {
     pub camera_bind_group: wgpu::BindGroup,
 
     pub start: Instant,
-    #[allow(dead_code)]
-    instance_buffer: wgpu::Buffer,
 }
 
 impl State {
@@ -230,7 +230,7 @@ impl State {
         let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Instance Buffer"),
             contents: bytemuck::cast_slice(&raw_instances),
-            usage: wgpu::BufferUsages::VERTEX,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
         });
 
         (vertex_buffer, index_buffer, num_indices, instance_buffer)
@@ -270,6 +270,24 @@ impl State {
 
 
 impl State {
+    pub fn update_instances(&mut self) {
+        let raw_instances = self.instances.iter()
+            .map(|instance| instance.to_raw())
+            .collect::<Vec<_>>();
+
+        self.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&raw_instances));
+        // let instance_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        //     label: Some("Instance Buffer"),
+        //     contents: bytemuck::cast_slice(&raw_instances),
+        //     usage: wgpu::BufferUsages::VERTEX,
+        // });
+        
+        // self.instance_buffer = instance_buffer;
+    }
+}
+
+
+impl State {
     pub fn window(&self) -> &Window {
         &self.window
     }
@@ -291,11 +309,12 @@ impl State {
     }
 
     pub fn update(&mut self) { 
-        let num_elapsed = self.start.elapsed().as_millis() as u32 / 10;
-
-        if num_elapsed <= self.instances.len() as _ {
-            self.num_instances = num_elapsed;
-        }
+        // let num_elapsed = self.start.elapsed().as_millis() as u32 / 10;
+        //
+        // if num_elapsed <= self.instances.len() as _ {
+        //     self.num_instances = num_elapsed;
+        // }
+        self.update_instances();
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {

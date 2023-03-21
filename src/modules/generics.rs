@@ -40,6 +40,19 @@ impl Instance {
             color: self.color.into(),
         }
     }
+
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Default for Instance {
+    fn default() -> Self {
+        Instance { 
+            position: Vec3::ZERO, 
+            color: Vec3::ONE, 
+        } 
+    }
 }
 
 #[repr(C)]

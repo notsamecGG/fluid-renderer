@@ -9,9 +9,14 @@ pub fn create_grid(grid_dimensions: (u32, u32), screen_dimensions: (u32, u32), o
     let screen_dimensions: (f32, f32) = (screen_dimensions.0 as f32, screen_dimensions.1 as f32);
 
     let instance_offset: (f32, f32) = (screen_dimensions.0 / grid_dimensions.0, screen_dimensions.1 / grid_dimensions.1);
+    let offset = (
+        -1.0 * (width - 1) as f32 * instance_offset.0 / 2.0,
+        -1.0 * (height - 1) as f32 * instance_offset.1 / 2.0,
+        offset.2
+    );
 
-    (1..height).flat_map(|y| {
-        (1..width).map(move |x| {
+    (0..height).flat_map(|y| {
+        (0..width).map(move |x| {
             Instance {
                 position: vec3(
                     x as f32 * instance_offset.0 + offset.0,
@@ -35,8 +40,6 @@ pub fn create_dense_rect(grid_dimensions: (u32, u32), offset: (f32, f32, f32), p
     let (width, height) = grid_dimensions;
     let width = (width as f32 / particle_radius).ceil() as u32;
     let height = (height as f32 / particle_radius).ceil() as u32;
-    
-    dbg!(grid_dimensions, width, height);
 
     (0..=height).flat_map(|y| {
         (0..=width).filter(move |x| {

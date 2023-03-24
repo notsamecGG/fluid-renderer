@@ -1,10 +1,10 @@
-use glam::{Vec3, Mat4};
+use glam::{Vec3A, Mat4};
 
 pub struct Camera {
     pub aspect: f32,
-    pub eye: Vec3,
-    pub target: Vec3,
-    pub up: Vec3,
+    pub eye: Vec3A,
+    pub target: Vec3A,
+    pub up: Vec3A,
     pub fovy: f32,
     pub znear: f32, 
     pub zfar: f32,
@@ -12,7 +12,7 @@ pub struct Camera {
 
 impl Camera {
     pub fn build_view_projection_matrix(&self) -> glam::Mat4 {
-        let view = glam::f32::Mat4::look_at_rh(self.eye, self.target, self.up);
+        let view = glam::f32::Mat4::look_at_rh(self.eye.into(), self.target.into(), self.up.into());
         let fov_radians = self.fovy / 180.0 * std::f32::consts::PI;
         let projection = glam::Mat4::perspective_rh(fov_radians, self.aspect, self.znear, self.zfar);
 
@@ -26,7 +26,7 @@ impl Default for Camera {
             aspect: 16.0/9.0, 
             eye: (0.0, 0.0, 4.0).into(),
             target: (0.0, 0.0, 0.0).into(),
-            up: Vec3::Y,
+            up: Vec3A::Y,
             fovy: 90.0,
             znear: 0.1,
             zfar: 100.0,

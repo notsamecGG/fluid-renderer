@@ -1,5 +1,5 @@
 use crate::{Instance, PARTICLE_SIZE};
-use glam::{vec3, Vec3};
+use glam::{vec3a, Vec3A};
 
 pub fn create_square(grid_dimensions: (u32, u32), screen_dimensions: (u32, u32), offset: (f32, f32, f32)) -> Vec<Instance> {
     let width = grid_dimensions.0;
@@ -18,11 +18,11 @@ pub fn create_square(grid_dimensions: (u32, u32), screen_dimensions: (u32, u32),
     (0..height).flat_map(|y| {
         (0..width).map(move |x| {
             Instance {
-                position: vec3(
+                position: vec3a(
                     x as f32 * instance_offset.0 + offset.0,
                     y as f32 * instance_offset.1 + offset.1,
                     offset.2 ),
-                color: vec3(
+                color: vec3a(
                     x as f32 / width as f32, 
                     y as f32 / height as f32, 
                     0.8
@@ -52,11 +52,11 @@ pub fn create_cube(grid_dimensions: (u32, u32, u32), offset: (f32, f32, f32)) ->
         (0..height).flat_map(move |y| {
             (0..width).map(move |x| {
                 Instance {
-                    position: vec3(
+                    position: vec3a(
                         x as f32 * instance_offset.0 + offset.0,
                         y as f32 * instance_offset.1 + offset.1,
                         z as f32 * instance_offset.2 + offset.2 ),
-                    color: vec3(
+                    color: vec3a(
                         x as f32 / width as f32, 
                         y as f32 / height as f32, 
                         0.8
@@ -68,9 +68,9 @@ pub fn create_cube(grid_dimensions: (u32, u32, u32), offset: (f32, f32, f32)) ->
     .collect::<Vec<_>>()
 }
 
-pub fn create_dense_rect(grid_dimensions: (u32, u32), offset: (f32, f32, f32), particle_radius: Option<f32>, color: Option<Vec3>) -> Vec<Instance> {
+pub fn create_dense_rect(grid_dimensions: (u32, u32), offset: (f32, f32, f32), particle_radius: Option<f32>, color: Option<Vec3A>) -> Vec<Instance> {
     let particle_radius = particle_radius.unwrap_or(PARTICLE_SIZE);
-    let color = color.unwrap_or(Vec3::ONE);
+    let color = color.unwrap_or(Vec3A::ONE);
 
     let (width, height) = grid_dimensions;
     let width = (width as f32 / particle_radius).ceil() as u32;
@@ -84,14 +84,14 @@ pub fn create_dense_rect(grid_dimensions: (u32, u32), offset: (f32, f32, f32), p
             let pos_y = y as f32 * particle_radius + offset.1;
 
             Instance {
-                position: vec3(pos_x, pos_y, offset.2),
+                position: vec3a(pos_x, pos_y, offset.2),
                 color
             }
         })
     }).collect()
 }
 
-pub fn create_len(len: u32, color: Vec3) -> Vec<Instance> {
+pub fn create_len(len: u32, color: Vec3A) -> Vec<Instance> {
     (0..len).map(|_index| Instance {
         color,
         ..Default::default() 

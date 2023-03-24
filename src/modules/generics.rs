@@ -1,4 +1,4 @@
-use glam::Vec3;
+use glam::Vec3A;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -30,8 +30,8 @@ impl Vertex {
 }
 
 pub struct Instance {
-    pub position: Vec3,
-    pub color: Vec3,
+    pub position: Vec3A,
+    pub color: Vec3A,
 }
 impl Instance {
     pub fn to_raw(&self) -> InstanceRaw {
@@ -49,8 +49,8 @@ impl Instance {
 impl Default for Instance {
     fn default() -> Self {
         Instance { 
-            position: Vec3::ZERO, 
-            color: Vec3::ONE, 
+            position: Vec3A::ZERO, 
+            color: Vec3A::ONE, 
         } 
     }
 }

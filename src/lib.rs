@@ -13,6 +13,7 @@ pub use modules::*;
 
 pub const PARTICLE_SIZE: f32 = 0.1;
 pub const GRID_DIMENSIONS: (u32, u32) = (20, 20);
+pub const CUBE_DIMENSIONS: (u32, u32, u32) = (20, 20, 20);
 
 
 pub struct InitOutput {
@@ -92,7 +93,7 @@ pub async fn run() {
     let shader_source = wgpu::ShaderSource::Wgsl(std::fs::read_to_string("src/shader.wgsl").unwrap().into());
     let vertices = Quad.scale(PARTICLE_SIZE);
     let indices = Quad::INDICES;
-    let instances = create_grid(GRID_DIMENSIONS, (2, 2), (-1.0, -1.0, 0.0));
+    let instances = create_cube(CUBE_DIMENSIONS, (-1.0, -1.0, -2.0));
     let camera = Camera {
         aspect: aspect_ratio,
         fovy: 45.0,

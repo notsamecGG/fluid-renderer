@@ -29,6 +29,7 @@ impl Vertex {
     }
 }
 
+#[derive(Debug)]
 pub struct Instance {
     pub position: Vec3,
     pub color: Vec3,

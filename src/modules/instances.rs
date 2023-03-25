@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use crate::{Instance, PARTICLE_SIZE};
 use glam::{vec3, Vec3};
 
@@ -33,7 +34,7 @@ pub fn create_square(grid_dimensions: (u32, u32), screen_dimensions: (u32, u32),
     .collect::<Vec<_>>()
 }
 
-pub fn create_cube(grid_dimensions: (u32, u32, u32), offset: (f32, f32, f32)) -> Vec<Instance> {
+pub fn create_cube(grid_dimensions: (u32, u32, u32), particle_offset: Option<(f32, f32, f32)>, offset: (f32, f32, f32)) -> Vec<Instance> {
     let width = grid_dimensions.0;
     let height = grid_dimensions.1;
     let depth = grid_dimensions.2;
@@ -42,24 +43,28 @@ pub fn create_cube(grid_dimensions: (u32, u32, u32), offset: (f32, f32, f32)) ->
     let grid_dimensions = (grid_dimensions.0 as f32, grid_dimensions.1 as f32, grid_dimensions.2 as f32);
 
     let instance_offset = (screen_space_size / grid_dimensions.0, screen_space_size / grid_dimensions.1, screen_space_size / grid_dimensions.2);
+    let instance_offset = particle_offset.unwrap_or(instance_offset);
+
     let offset = (
         -1.0 * (width - 1) as f32 * instance_offset.0 / 2.0,
         -1.0 * (height - 1) as f32 * instance_offset.1 / 2.0,
         offset.2
     );
 
+
     (0..depth).flat_map(|z| {
         (0..height).flat_map(move |y| {
             (0..width).map(move |x| {
+                let b = z as f32 / depth as f32;
                 Instance {
                     position: vec3(
                         x as f32 * instance_offset.0 + offset.0,
                         y as f32 * instance_offset.1 + offset.1,
                         z as f32 * instance_offset.2 + offset.2 ),
                     color: vec3(
-                        x as f32 / width as f32, 
-                        y as f32 / height as f32, 
-                        0.8
+                        x as f32 / width as f32 * b, 
+                        y as f32 / height as f32 * b, 
+                        0.8 * b,
                     ),
                 }
             })

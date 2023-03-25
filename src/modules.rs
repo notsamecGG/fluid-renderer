@@ -4,6 +4,9 @@ pub use state::*;
 pub mod generics;
 pub use generics::*;
 
+pub mod texture;
+pub use texture::*;
+
 pub mod shapes;
 pub use shapes::*;
 

@@ -140,7 +140,7 @@ impl State {
                     format: config.format,
                     blend: Some(wgpu::BlendState {
                         color: wgpu::BlendComponent::REPLACE,
-                        alpha: wgpu::BlendComponent::REPLACE,
+                        alpha: wgpu::BlendComponent::OVER,
                     }),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
@@ -293,6 +293,11 @@ impl State {
         
         // self.instance_buffer = instance_buffer;
     }
+
+    pub fn update_camera(&mut self) {
+        self.camera_uniform.update_view_projection(&self.camera);
+        self.queue.write_buffer(&self.camera_buffer, 0, bytemuck::cast_slice(&[self.camera_uniform]));
+    }
 }
 
 
@@ -310,6 +315,7 @@ impl State {
             self.depth_texture = DepthTexture::create_depth_texture(&self.device, &self.config, "depth_texture");
 
             self.camera.aspect = self.config.width as f32 / self.config.height as f32;
+            self.update_camera();
         }
     }
 

@@ -45,7 +45,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     var alpha = 1f - step(0.4, distance_from_middle);
 
     var color = vec3(0.1f, 0.1f, 1.0f); 
-    color = in.color;
+    /* color = in.color; */
     color *= smoothstep(0.5, 0.0, distance_from_middle);
 
     return vec4(color, alpha);

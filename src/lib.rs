@@ -1,3 +1,4 @@
+use glam::vec3a;
 use winit::{
     event::*,
     event_loop::{EventLoop, ControlFlow},
@@ -93,9 +94,10 @@ pub async fn run() {
     let shader_source = wgpu::ShaderSource::Wgsl(std::fs::read_to_string("src/shader.wgsl").unwrap().into());
     let vertices = Quad.scale(PARTICLE_SIZE);
     let indices = Quad::INDICES;
-    let instances = create_cube(CUBE_DIMENSIONS, None, (-1.0, -1.0, -2.0));
+    let instances = create_cube(0.1, CUBE_DIMENSIONS, None, (-1.0, -1.0, -2.0));
     let camera = Camera {
         aspect: aspect_ratio,
+        eye: vec3a(-4.0, 2.0, 2.0),
         fovy: 45.0,
         ..Default::default()
     };
@@ -120,7 +122,7 @@ pub async fn run() {
             Event::RedrawRequested(window_id) if window_id == state.window().id() => {
                 state.update();
                 crate::handle_rendering(&mut state, control_flow)
-            }
+            },
             Event::MainEventsCleared => {
                 // RedrawRequested will only trigger once, unless we manually
                 // request it.

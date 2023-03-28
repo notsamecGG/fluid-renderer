@@ -87,7 +87,7 @@ pub fn set_ui_size(ctxt: &mut imgui::Context, window: &winit::window::Window){
     ctxt.io_mut().font_global_scale = (1.0 / window.scale_factor()) as f32;
 }
 
-pub fn hadnle_windowing(state: &mut State, event: &WindowEvent, control_flow: &mut ControlFlow) {
+pub fn handle_windowing(state: &mut State, imgui_ctxt: &mut imgui::Context, event: &WindowEvent, control_flow: &mut ControlFlow) {
     if !state.input(event) {
         match event {
             WindowEvent::CloseRequested
@@ -101,10 +101,12 @@ pub fn hadnle_windowing(state: &mut State, event: &WindowEvent, control_flow: &m
                 ..
             } => control_flow.set_exit(),
             WindowEvent::Resized(physical_size) => {
+                set_ui_size(imgui_ctxt, &state.window);
                 state.resize(*physical_size);
             }
             WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
                 // new_inner_size is &mut so w have to dereference it twice
+                set_ui_size(imgui_ctxt, &state.window);
                 state.resize(**new_inner_size);
             }
             _ => {}
@@ -168,7 +170,7 @@ pub async fn run() {
                 ref event,
                 window_id,
             } if window_id == state.window().id() => {
-                crate::hadnle_windowing(&mut state, event, control_flow)
+                crate::handle_windowing(&mut state, &mut imgui_ctxt, event, control_flow)
             }
             Event::RedrawRequested(window_id) if window_id == state.window().id() => {
                 state.update();

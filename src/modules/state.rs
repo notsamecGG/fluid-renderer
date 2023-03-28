@@ -287,13 +287,21 @@ impl State {
             .collect::<Vec<_>>();
 
         self.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&raw_instances));
-        // let instance_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        //     label: Some("Instance Buffer"),
-        //     contents: bytemuck::cast_slice(&raw_instances),
-        //     usage: wgpu::BufferUsages::VERTEX,
-        // });
-        
-        // self.instance_buffer = instance_buffer;
+    }
+
+    pub fn resize_instances(&mut self, instances: Vec<Instance>) {
+        self.instances = instances;
+        let raw_instances = self.instances.iter()
+            .map(|instance| instance.to_raw())
+            .collect::<Vec<_>>();
+
+        let instance_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Instance Buffer"),
+            contents: bytemuck::cast_slice(&raw_instances),
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+        });
+
+        self.instance_buffer = instance_buffer;
     }
 
     pub fn update_camera(&mut self) {

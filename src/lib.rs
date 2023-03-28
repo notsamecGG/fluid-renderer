@@ -1,3 +1,5 @@
+use std::time::{Instant, Duration};
+
 use glam::vec3a;
 use winit::{
     event::*,
@@ -7,6 +9,10 @@ use winit::{
 
 pub use wgpu;
 pub use winit;
+
+pub use imgui;
+pub use imgui_wgpu;
+pub use imgui_winit_support;
 
 mod modules;
 pub use modules::*;
@@ -42,6 +48,45 @@ pub fn init() -> InitOutput {
     }
 }
 
+pub fn init_ui(state: &State, font_size: f64) -> (imgui::Context, imgui_winit_support::WinitPlatform, imgui_wgpu::Renderer) {
+    let mut ctxt = imgui::Context::create();
+    let mut platform = imgui_winit_support::WinitPlatform::init(&mut ctxt);
+
+    platform.attach_window(
+        ctxt.io_mut(), 
+        &state.window, 
+        imgui_winit_support::HiDpiMode::Default,
+    );
+
+    ctxt.set_ini_filename(None);
+    set_ui_size(&mut ctxt, &state.window);
+
+    let font_size = (font_size * state.window.scale_factor()) as f32;
+    ctxt.fonts().add_font(&[imgui::FontSource::DefaultFontData { 
+        config: Some(imgui::FontConfig {
+            oversample_h: 1,
+            pixel_snap_h: true,
+            size_pixels: font_size,
+            ..Default::default()
+
+        }),
+    }]);
+
+    let render_config = imgui_wgpu::RendererConfig {
+        texture_format: state.surface_format,
+        depth_format: Some(wgpu::TextureFormat::Depth32Float),
+        ..Default::default()
+    };
+
+    let renderer = imgui_wgpu::Renderer::new(&mut ctxt, &state.device, &state.queue, render_config);
+
+    (ctxt, platform, renderer)
+}
+
+pub fn set_ui_size(ctxt: &mut imgui::Context, window: &winit::window::Window){
+    ctxt.io_mut().font_global_scale = (1.0 / window.scale_factor()) as f32;
+}
+
 pub fn hadnle_windowing(state: &mut State, event: &WindowEvent, control_flow: &mut ControlFlow) {
     if !state.input(event) {
         match event {
@@ -67,8 +112,8 @@ pub fn hadnle_windowing(state: &mut State, event: &WindowEvent, control_flow: &m
     }
 }
 
-pub fn handle_rendering(state: &mut State, control_flow: &mut ControlFlow) {
-    match state.render() {
+pub fn handle_rendering(state: &mut State, imgui_renderer: &mut imgui_wgpu::Renderer, draw_data: &imgui::DrawData, control_flow: &mut ControlFlow) {
+    match state.render_with_ui(imgui_renderer, draw_data) {
         Ok(_) => {}
         // Reconfigure the surface if it's lost or outdated
         Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => state.resize(state.size),
@@ -110,8 +155,14 @@ pub async fn run() {
         instances, 
         camera
     ).await;
+    
+    let (mut imgui_ctxt, mut imgui_platform, mut imgui_renderer) = init_ui(&state, 10.0);
+    let mut frame_delta = Duration::new(0, 0);
 
     event_loop.run(move |event, _, control_flow| {
+        let frame_start = Instant::now();
+        imgui_platform.handle_event(imgui_ctxt.io_mut(), &state.window, &event);
+
         match event {
             Event::WindowEvent {
                 ref event,
@@ -121,7 +172,20 @@ pub async fn run() {
             }
             Event::RedrawRequested(window_id) if window_id == state.window().id() => {
                 state.update();
-                crate::handle_rendering(&mut state, control_flow)
+
+                imgui_platform.prepare_frame(imgui_ctxt.io_mut(), &state.window).expect("Failed to prepare ui frame");
+                imgui_ctxt.io_mut().update_delta_time(frame_delta);
+                let ui = imgui_ctxt.frame();
+
+                {
+                    ui.window("Info")
+                        .size([200.0, 100.0], imgui::Condition::FirstUseEver)
+                        .build(|| {
+                            ui.text("hello, world");
+                        });
+                }
+
+                crate::handle_rendering(&mut state, &mut imgui_renderer, imgui_ctxt.render(), control_flow)
             },
             Event::MainEventsCleared => {
                 // RedrawRequested will only trigger once, unless we manually
@@ -130,5 +194,6 @@ pub async fn run() {
             }
             _ => {}
         }
+        frame_delta = frame_start.elapsed();
     });
 }

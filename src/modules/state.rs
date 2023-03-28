@@ -25,6 +25,7 @@ pub struct State {
     pub config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
     pub window: Window,
+    pub surface_format: wgpu::TextureFormat,
     
     pub render_pipeline: wgpu::RenderPipeline,
     pub depth_texture: DepthTexture,
@@ -47,7 +48,7 @@ pub struct State {
 }
 
 impl State {
-    async fn init_wgpu(window: &Window) -> (wgpu::Surface, wgpu::Device, wgpu::Queue, wgpu::SurfaceConfiguration, winit::dpi::PhysicalSize<u32>) {
+    async fn init_wgpu(window: &Window) -> (wgpu::Surface, wgpu::TextureFormat, wgpu::Device, wgpu::Queue, wgpu::SurfaceConfiguration, winit::dpi::PhysicalSize<u32>) {
         let size = window.inner_size();
 
         // The instance is a handle to our GPU
@@ -106,7 +107,7 @@ impl State {
         };
 
         surface.configure(&device, &config);
-        (surface, device, queue, config, size)
+        (surface, surface_format, device, queue, config, size)
     }
 
 
@@ -245,7 +246,7 @@ impl State {
 
 
     pub async fn new<'a>(window: Window, shader_source: wgpu::ShaderSource<'a>, vertices: &[Vertex], indices: &[u16], instances: Vec<Instance>, camera: Camera) -> Self {
-        let (surface, device, queue, config, size) = Self::init_wgpu(&window).await;
+        let (surface, surface_format, device, queue, config, size) = Self::init_wgpu(&window).await;
         let (camera_uniform, camera_buffer, camera_bind_group, camera_bind_group_layout) = Self::init_camera(&camera, &device);
         let render_pipeline = Self::init_render_pipeline(&device, shader_source, &config, &camera_bind_group_layout);
         let (vertex_buffer, index_buffer, num_indices, instance_buffer) = Self::init_buffers(&device, vertices, indices, &instances);
@@ -262,6 +263,7 @@ impl State {
             render_pipeline,
             depth_texture,
             window,
+            surface_format,
             vertex_buffer,
             index_buffer,
             num_indices,
@@ -372,6 +374,55 @@ impl State {
             render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
             render_pass.draw_indexed(0..self.num_indices, 0, 0..self.num_instances);
+        }
+
+        self.queue.submit(iter::once(encoder.finish()));
+        output.present();
+
+        Ok(())
+    }
+    
+    pub fn render_with_ui(&mut self, ui_renderer: &mut imgui_wgpu::Renderer, draw_data: &imgui::DrawData) -> Result<(), wgpu::SurfaceError> {
+        let output = self.surface.get_current_texture()?;
+        let view = output
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Render Encoder"),
+            });
+
+        {
+            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("Render Pass"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(CLEAR_COLOR),
+                        store: true,
+                    },
+                })],
+                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                    view: &self.depth_texture.view,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(1.0),
+                        store: true,
+                    }),
+                    stencil_ops: None,
+                }),
+            });
+
+            render_pass.set_pipeline(&self.render_pipeline);
+            render_pass.set_bind_group(0, &self.camera_bind_group, &[]);
+            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+            render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
+            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+            render_pass.draw_indexed(0..self.num_indices, 0, 0..self.num_instances);
+
+            ui_renderer.render(draw_data, &self.queue, &self.device, &mut render_pass).expect("Falied to render ui");
         }
 
         self.queue.submit(iter::once(encoder.finish()));

@@ -13,8 +13,11 @@ opt-level = 3
 bytemuck = { version = "1.13.1", features = ["derive"] }
 env_logger = "0.10.0"
 glam = "0.23.0"
+imgui = "0.10.0"
+imgui-wgpu = "0.22.0"
+imgui-winit-support = "0.10.0"
 log = "0.4.17"
 pollster = "0.3.0"
 rand = "0.8.5"
 wgpu = "0.15.1"
-winit = "0.28.3"
+winit = "0.27.5"
